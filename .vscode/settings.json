@@ -3,7 +3,6 @@
 {
 	// Что вызывается при сохранении
 	"editor.codeActionsOnSave": {
-		// Исправление всего при помощи eslint
-		"source.fixAll.eslint": true
+		"source.fixAll.eslint": "explicit"
 	}
 }

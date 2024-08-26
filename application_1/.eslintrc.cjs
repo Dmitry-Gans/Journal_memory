@@ -20,5 +20,7 @@ module.exports = {
 		semi: ['error', 'always', { omitLastInOneLineBlock: false }], // Указывает где я не поставил ";"
 		'comma-dangle': ['error', 'never'], // Указывает где есть висячая запятая
 		quotes: ['error', 'single'], // Все кавычки превращаем в одинарные
+		'react/prop-types': [0], // Выключил типы для пропсов
+		'indent': ['error', 'tab'], // Единый стиль отступов для тапов
 	},
 };
