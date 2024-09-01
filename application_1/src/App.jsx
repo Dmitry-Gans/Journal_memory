@@ -1,5 +1,4 @@
 import './App.css';
-import Button from './components/Button/Button';
 import CardButton from './components/CardButton/CardButton';
 import JournalItem from './components/JournalItem/JournalItem';
 import LeftPanel from './layouts/LeftPanel/LeftPanel';
@@ -7,18 +6,20 @@ import Body from './layouts/Body/Body';
 import Header from './components/Header/Header';
 import JournalAddButton from './components/JournalAddButton/JournalAddButton';
 import JournalList from './components/JournalList/JournalList';
+import JournalForm from './components/JournalForm/JournalForm';
+
 function App() {
 	const data = [
 		{
 			title: 'Подготовка к обновлению курсов',
 			date: new Date(),
-			text: 'Горные походы открывают удивительные природные ландшафты',
+			text: 'Горные походы открывают удивительные природные ландшафты'
 		},
 		{
 			title: 'Поход в горы',
 			date: new Date(),
-			text: 'Думал, что очень много времени',
-		},
+			text: 'Думал, что очень много времени'
+		}
 	];
 
 	return (
@@ -43,7 +44,9 @@ function App() {
 					</CardButton>
 				</JournalList>
 			</LeftPanel>
-			<Body>Body</Body>
+			<Body>
+				<JournalForm />
+			</Body>
 		</div>
 	);
 }
