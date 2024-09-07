@@ -1,13 +1,14 @@
-import { useState } from 'react';
 import './JournalForm.css';
 import Button from '../Button/Button';
+import { useState } from 'react';
 
-function JournalForm() {
-	const [inputData, setInputData] = useState('');
-
-	const inputChange = e => {
-		setInputData(e.target.value);
-	};
+function JournalForm({ onSubmit }) {
+	// Состояние для хранения валидности полей формы:
+	const [formValidState, setFormValidState] = useState({
+		title: true,
+		post: true,
+		date: true
+	});
 
 	// 1. Извлечение данных формы:
 	// new FormData(e.target) - создает объект FormData, содержащий все данные из формы, которая вызвала событие. e.target ссылается на элемент формы, который был отправлен.
@@ -18,15 +19,54 @@ function JournalForm() {
 		e.preventDefault();
 		const formData = new FormData(e.target);
 		const formProps = Object.fromEntries(formData);
-		console.log(formProps);
+		// Все проверки на валидность полей формы:
+		let isFormValid = true;
+		if (!formProps.title?.trim().length) {
+			setFormValidState(prevState => ({ ...prevState, title: false }));
+			isFormValid = false;
+		} else {
+			setFormValidState(prevState => ({ ...prevState, title: true }));
+		}
+		if (!formProps.post?.trim().length) {
+			setFormValidState(prevState => ({ ...prevState, post: false }));
+			isFormValid = false;
+		} else {
+			setFormValidState(prevState => ({ ...prevState, post: true }));
+		}
+		if (!formProps.date) {
+			setFormValidState(prevState => ({ ...prevState, date: false }));
+			isFormValid = false;
+		} else {
+			setFormValidState(prevState => ({ ...prevState, date: true }));
+		}
+		if (!isFormValid) {
+			return; // Если форма невалидна, не отправляем данные
+		}
+
+		onSubmit(formProps);
+		e.target.reset(); // Обнуляем инпуты после отправки формы.
 	};
 
 	return (
 		<form className='journal-form' onSubmit={addJournalItem}>
-			<input type='text' name='title' />
-			<input type='date' name='date' />
-			<input type='text' name='tag' value={inputData} onChange={inputChange} />
-			<textarea name='post' id='' cols='30' rows='10'></textarea>
+			<input
+				type='text'
+				name='title'
+				style={{ border: formValidState.title ? undefined : '1px solid red' }}
+			/>
+			<input
+				type='date'
+				name='date'
+				style={{ border: formValidState.date ? undefined : '1px solid red' }}
+			/>
+			<input type='text' name='tag' />
+			<textarea
+				name='post'
+				id=''
+				cols='30'
+				rows='10'
+				style={{ border: formValidState.post ? undefined : '1px solid red' }}
+			></textarea>
 			<Button text='Сохранить' />
 		</form>
 	);
