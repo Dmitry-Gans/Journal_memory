@@ -1,6 +1,7 @@
-import './JournalForm.css';
+import styles from './JournalForm.module.css';
 import Button from '../Button/Button';
 import { useState } from 'react';
+import cn from 'classnames';
 
 function JournalForm({ onSubmit }) {
 	// Состояние для хранения валидности полей формы:
@@ -48,24 +49,46 @@ function JournalForm({ onSubmit }) {
 	};
 
 	return (
-		<form className='journal-form' onSubmit={addJournalItem}>
-			<input
-				type='text'
-				name='title'
-				style={{ border: formValidState.title ? undefined : '1px solid red' }}
-			/>
-			<input
-				type='date'
-				name='date'
-				style={{ border: formValidState.date ? undefined : '1px solid red' }}
-			/>
-			<input type='text' name='tag' />
+		<form className={styles['journal-form']} onSubmit={addJournalItem}>
+			<div>
+				<input
+					// Пример работы библиотеки "classname":
+					className={cn(styles['input-title'], {
+						[styles.invalid]: !formValidState.title
+					})}
+					type='text'
+					name='title'
+				/>
+			</div>
+			<div className={styles['form-row']}>
+				<label className={styles['form-label']} htmlFor='date'>
+					<img src='/icon_calendar.svg' alt='Иконка календаря' />
+					<span>Дата</span>
+				</label>
+				<input
+					className={cn(styles.input, {
+						[styles.invalid]: !formValidState.date
+					})}
+					type='date'
+					name='date'
+					id='date'
+				/>
+			</div>
+			<div className={styles['form-row']}>
+				<label className={styles['form-label']} htmlFor='tag'>
+					<img src='/icon_folder.svg' alt='Иконка папки' />
+					<span>Метки</span>
+				</label>
+				<input className={styles.input} type='text' name='tag' id='tag' />
+			</div>
 			<textarea
+				className={cn(styles.input, {
+					[styles.invalid]: !formValidState.post
+				})}
 				name='post'
 				id=''
 				cols='30'
 				rows='10'
-				style={{ border: formValidState.post ? undefined : '1px solid red' }}
 			></textarea>
 			<Button text='Сохранить' />
 		</form>
