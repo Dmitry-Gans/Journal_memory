@@ -1,15 +1,34 @@
 import styles from './JournalForm.module.css';
 import Button from '../Button/Button';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import cn from 'classnames';
 
+const INITIAL_STATE = {
+	title: true,
+	post: true,
+	date: true
+};
 function JournalForm({ onSubmit }) {
 	// Состояние для хранения валидности полей формы:
-	const [formValidState, setFormValidState] = useState({
-		title: true,
-		post: true,
-		date: true
-	});
+	const [formValidState, setFormValidState] = useState(INITIAL_STATE);
+
+	useEffect(() => {
+		// Объявляем переменную, чтобы с помощью нее потом снять событие
+		let timerId;
+
+		// Если хотя бы одно поле не валидно, устанавливаем таймаут, чтобы поля автоматически стали валидными через 2 секунды:
+		if (
+			!formValidState.date ||
+			!setFormValidState.post ||
+			!formValidState.title
+		) {
+			timerId = setTimeout(() => {
+				setFormValidState(INITIAL_STATE);
+			}, 2000);
+		}
+		// Очищаем событие при помощью clearTumeout
+		return () => clearTimeout(timerId);
+	}, [formValidState]);
 
 	// 1. Извлечение данных формы:
 	// new FormData(e.target) - создает объект FormData, содержащий все данные из формы, которая вызвала событие. e.target ссылается на элемент формы, который был отправлен.
