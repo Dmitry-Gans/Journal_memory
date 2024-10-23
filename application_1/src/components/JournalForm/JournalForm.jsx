@@ -1,70 +1,59 @@
 import styles from './JournalForm.module.css';
 import Button from '../Button/Button';
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import cn from 'classnames';
+import { formReducer, INITIAL_STATE } from './JournalForm.state';
 
-const INITIAL_STATE = {
-	title: true,
-	post: true,
-	date: true
-};
 function JournalForm({ onSubmit }) {
-	// Состояние для хранения валидности полей формы:
-	const [formValidState, setFormValidState] = useState(INITIAL_STATE);
+	// Используем хук useReducer для управления состоянием формы.
+	// formState будет хранить текущее состояние, а dispatchForm — функцию для отправки действий редьюсеру.
+	const [formState, dispatchForm] = useReducer(formReducer, INITIAL_STATE);
 
+	// Деструктурируем свойства из formState для удобства доступа к состоянию формы.
+	const { isValid, isFormReadyToSubmit, values } = formState;
+
+	// useEffect будет следить за изменениями в объекте isValid и выполнять код, когда он изменится.
 	useEffect(() => {
-		// Объявляем переменную, чтобы с помощью нее потом снять событие
+		// Объявляем переменную timerId для управления таймером.
 		let timerId;
 
-		// Если хотя бы одно поле не валидно, устанавливаем таймаут, чтобы поля автоматически стали валидными через 2 секунды:
-		if (
-			!formValidState.date ||
-			!setFormValidState.post ||
-			!formValidState.title
-		) {
+		// Проверяем, валидны ли все поля формы; если хотя бы одно поле не валидно,
+		// устанавливаем таймаут на 2 секунды для автоматического сброса валидности.
+		if (!isValid.date || !isValid.post || !isValid.title) {
 			timerId = setTimeout(() => {
-				setFormValidState(INITIAL_STATE);
+				// Отправляем действие 'RESET_VALIDITY' в редьюсер, чтобы сбросить состояние валидности полей.
+				dispatchForm({ type: 'RESET_VALIDITY' });
 			}, 2000);
 		}
-		// Очищаем событие при помощью clearTumeout
+
+		// Функция очистки, которая срабатывает при размонтировании компонента или при следующем вызове useEffect.
+		// Очищает таймер, чтобы избежать утечек памяти, если действие не выполнено.
 		return () => clearTimeout(timerId);
-	}, [formValidState]);
+	}, [isValid]); // Зависимость от isValid, чтобы срабатывать при его изменении.
 
-	// 1. Извлечение данных формы:
-	// new FormData(e.target) - создает объект FormData, содержащий все данные из формы, которая вызвала событие. e.target ссылается на элемент формы, который был отправлен.
-	// 2. Преобразуем в объект:
-	// Метод Object.fromEntries() принимает объект FormData и преобразует его в обычный объект JavaScript. Это позволит легко получить доступ к данным формы по ключам.
+	// Второй useEffect следит за изменением состояния isFormReadyToSubmit.
+	useEffect(() => {
+		// Если форма готова к отправке (все поля валидны), вызываем функцию onSubmit
+		// с текущими значениями полей формы.
+		if (isFormReadyToSubmit) {
+			onSubmit(values);
+			dispatchForm({ type: 'CLEAR' });
+		}
+	}, [isFormReadyToSubmit]); // Зависимость от isFormReadyToSubmit.
 
+	// Обработчик события отправки формы.
 	const addJournalItem = e => {
 		e.preventDefault();
-		const formData = new FormData(e.target);
-		const formProps = Object.fromEntries(formData);
-		// Все проверки на валидность полей формы:
-		let isFormValid = true;
-		if (!formProps.title?.trim().length) {
-			setFormValidState(prevState => ({ ...prevState, title: false }));
-			isFormValid = false;
-		} else {
-			setFormValidState(prevState => ({ ...prevState, title: true }));
-		}
-		if (!formProps.post?.trim().length) {
-			setFormValidState(prevState => ({ ...prevState, post: false }));
-			isFormValid = false;
-		} else {
-			setFormValidState(prevState => ({ ...prevState, post: true }));
-		}
-		if (!formProps.date) {
-			setFormValidState(prevState => ({ ...prevState, date: false }));
-			isFormValid = false;
-		} else {
-			setFormValidState(prevState => ({ ...prevState, date: true }));
-		}
-		if (!isFormValid) {
-			return; // Если форма невалидна, не отправляем данные
-		}
+		// Отправляем действие 'SUBMIT' в редьюсер с собранными данными формы.
+		dispatchForm({ type: 'SUBMIT'});
+	};
 
-		onSubmit(formProps);
-		e.target.reset(); // Обнуляем инпуты после отправки формы.
+	// Обновляем состояние с помощью dispatchForm с новыми значениями полей формы.
+	const onChange = e => {
+		dispatchForm({
+			type: 'SET_VALUE',
+			payload: { [e.target.name]: e.target.value }
+		});
 	};
 
 	return (
@@ -73,9 +62,11 @@ function JournalForm({ onSubmit }) {
 				<input
 					// Пример работы библиотеки "classname":
 					className={cn(styles['input-title'], {
-						[styles.invalid]: !formValidState.title
+						[styles.invalid]: !isValid.title
 					})}
 					type='text'
+					value={values.title}
+					onChange={onChange}
 					name='title'
 				/>
 			</div>
@@ -86,9 +77,11 @@ function JournalForm({ onSubmit }) {
 				</label>
 				<input
 					className={cn(styles.input, {
-						[styles.invalid]: !formValidState.date
+						[styles.invalid]: !isValid.date
 					})}
 					type='date'
+					value={values.date}
+					onChange={onChange}
 					name='date'
 					id='date'
 				/>
@@ -98,12 +91,21 @@ function JournalForm({ onSubmit }) {
 					<img src='/icon_folder.svg' alt='Иконка папки' />
 					<span>Метки</span>
 				</label>
-				<input className={styles.input} type='text' name='tag' id='tag' />
+				<input
+					className={styles.input}
+					type='text'
+					value={values.tag}
+					onChange={onChange}
+					name='tag'
+					id='tag'
+				/>
 			</div>
 			<textarea
 				className={cn(styles.input, {
-					[styles.invalid]: !formValidState.post
+					[styles.invalid]: !isValid.post
 				})}
+				value={values.post}
+				onChange={onChange}
 				name='post'
 				id=''
 				cols='30'
