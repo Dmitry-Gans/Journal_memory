@@ -18,15 +18,15 @@ function JournalForm({ onSubmit }) {
 
 	const focusError = isValid => {
 		switch (true) {
-			case !isValid.title:
-				titleRef.current.focus();
-				break;
-			case !isValid.date:
-				dateRef.current.focus();
-				break;
-			case !isValid.post:
-				postRef.current.focus();
-				break;
+		case !isValid.title:
+			titleRef.current.focus();
+			break;
+		case !isValid.date:
+			dateRef.current.focus();
+			break;
+		case !isValid.post:
+			postRef.current.focus();
+			break;
 		}
 	};
 

@@ -6,17 +6,12 @@ const Input = forwardRef(function Input(
 	{ className, isValid = true, appearance, ...props },
 	ref
 ) {
-	return (
-		<input
-			{...props}
-			ref={ref}
-			// Пример работы библиотеки "classname":
-			className={cn(className, styles['input'], {
-				[styles.invalid]: !isValid,
-				[styles['input-title']]: appearance === 'title'
-			})}
-		/>
-	);
+	// Пример работы библиотеки "classname":
+	const inputClass = cn(className, styles['input'], {
+		[styles.invalid]: !isValid,
+		[styles['input-title']]: appearance === 'title'
+	});
+	return <input {...props} ref={ref} className={inputClass} />;
 });
 
 export default Input;
