@@ -1,8 +1,9 @@
 import styles from './JournalForm.module.css';
 import Button from '../Button/Button';
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 import cn from 'classnames';
 import { formReducer, INITIAL_STATE } from './JournalForm.state';
+import Input from '../Input/Input';
 
 function JournalForm({ onSubmit }) {
 	// Используем хук useReducer для управления состоянием формы.
@@ -11,15 +12,32 @@ function JournalForm({ onSubmit }) {
 
 	// Деструктурируем свойства из formState для удобства доступа к состоянию формы.
 	const { isValid, isFormReadyToSubmit, values } = formState;
+	const titleRef = useRef();
+	const dateRef = useRef();
+	const postRef = useRef();
+
+	const focusError = isValid => {
+		switch (true) {
+			case !isValid.title:
+				titleRef.current.focus();
+				break;
+			case !isValid.date:
+				dateRef.current.focus();
+				break;
+			case !isValid.post:
+				postRef.current.focus();
+				break;
+		}
+	};
 
 	// useEffect будет следить за изменениями в объекте isValid и выполнять код, когда он изменится.
 	useEffect(() => {
 		// Объявляем переменную timerId для управления таймером.
 		let timerId;
-
 		// Проверяем, валидны ли все поля формы; если хотя бы одно поле не валидно,
 		// устанавливаем таймаут на 2 секунды для автоматического сброса валидности.
 		if (!isValid.date || !isValid.post || !isValid.title) {
+			focusError(isValid);
 			timerId = setTimeout(() => {
 				// Отправляем действие 'RESET_VALIDITY' в редьюсер, чтобы сбросить состояние валидности полей.
 				dispatchForm({ type: 'RESET_VALIDITY' });
@@ -39,13 +57,13 @@ function JournalForm({ onSubmit }) {
 			onSubmit(values);
 			dispatchForm({ type: 'CLEAR' });
 		}
-	}, [isFormReadyToSubmit]); // Зависимость от isFormReadyToSubmit.
+	}, [isFormReadyToSubmit, values, onSubmit]); // Зависимость от isFormReadyToSubmit.
 
 	// Обработчик события отправки формы.
 	const addJournalItem = e => {
 		e.preventDefault();
 		// Отправляем действие 'SUBMIT' в редьюсер с собранными данными формы.
-		dispatchForm({ type: 'SUBMIT'});
+		dispatchForm({ type: 'SUBMIT' });
 	};
 
 	// Обновляем состояние с помощью dispatchForm с новыми значениями полей формы.
@@ -59,15 +77,14 @@ function JournalForm({ onSubmit }) {
 	return (
 		<form className={styles['journal-form']} onSubmit={addJournalItem}>
 			<div>
-				<input
-					// Пример работы библиотеки "classname":
-					className={cn(styles['input-title'], {
-						[styles.invalid]: !isValid.title
-					})}
+				<Input
+					ref={titleRef}
+					isValid={isValid.title}
 					type='text'
 					value={values.title}
 					onChange={onChange}
 					name='title'
+					appearance='title'
 				/>
 			</div>
 			<div className={styles['form-row']}>
@@ -75,10 +92,9 @@ function JournalForm({ onSubmit }) {
 					<img src='/icon_calendar.svg' alt='Иконка календаря' />
 					<span>Дата</span>
 				</label>
-				<input
-					className={cn(styles.input, {
-						[styles.invalid]: !isValid.date
-					})}
+				<Input
+					ref={dateRef}
+					isValid={isValid.date}
 					type='date'
 					value={values.date}
 					onChange={onChange}
@@ -91,8 +107,7 @@ function JournalForm({ onSubmit }) {
 					<img src='/icon_folder.svg' alt='Иконка папки' />
 					<span>Метки</span>
 				</label>
-				<input
-					className={styles.input}
+				<Input
 					type='text'
 					value={values.tag}
 					onChange={onChange}
@@ -104,6 +119,7 @@ function JournalForm({ onSubmit }) {
 				className={cn(styles.input, {
 					[styles.invalid]: !isValid.post
 				})}
+				ref={postRef}
 				value={values.post}
 				onChange={onChange}
 				name='post'
