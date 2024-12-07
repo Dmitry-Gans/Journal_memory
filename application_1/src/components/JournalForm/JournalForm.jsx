@@ -135,7 +135,7 @@ function JournalForm({ onSubmit }) {
 				cols='30'
 				rows='10'
 			></textarea>
-			<Button text='Сохранить' />
+			<Button>Сохранить</Button>
 		</form>
 	);
 }
