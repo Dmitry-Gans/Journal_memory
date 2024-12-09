@@ -6,7 +6,7 @@ import { formReducer, INITIAL_STATE } from './JournalForm.state';
 import Input from '../Input/Input';
 import { UserContext } from '../../context/user.context';
 
-function JournalForm({ onSubmit }) {
+function JournalForm({ onSubmit, data }) {
 	// Используем хук useReducer для управления состоянием формы.
 	// formState будет хранить текущее состояние, а dispatchForm — функцию для отправки действий редьюсеру.
 	const [formState, dispatchForm] = useReducer(formReducer, INITIAL_STATE);
@@ -50,6 +50,13 @@ function JournalForm({ onSubmit }) {
 		return () => clearTimeout(timerId);
 	}, [isValid]); // Зависимость от isValid, чтобы срабатывать при его изменении.
 
+	useEffect(() => {
+		dispatchForm({
+			type: 'SET_VALUE',
+			payload: { ...data }
+		});
+	}, [data]);
+
 	// Второй useEffect следит за изменением состояния isFormReadyToSubmit.
 	useEffect(() => {
 		// Если форма готова к отправке (все поля валидны), вызываем функцию onSubmit
@@ -57,8 +64,12 @@ function JournalForm({ onSubmit }) {
 		if (isFormReadyToSubmit) {
 			onSubmit(values);
 			dispatchForm({ type: 'CLEAR' });
+			dispatchForm({
+				type: 'SET_VALUE',
+				payload: { userId }
+			});
 		}
-	}, [isFormReadyToSubmit, values, onSubmit]); // Зависимость от isFormReadyToSubmit.
+	}, [isFormReadyToSubmit, values, onSubmit, userId]); // Зависимость от isFormReadyToSubmit.
 
 	useEffect(() => {
 		dispatchForm({
@@ -104,7 +115,7 @@ function JournalForm({ onSubmit }) {
 					ref={dateRef}
 					isValid={isValid.date}
 					type='date'
-					value={values.date}
+					value={values.date? new Date(values.date).toISOString().slice(0,10) : ''}
 					onChange={onChange}
 					name='date'
 					id='date'
