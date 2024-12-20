@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 export function useLocalStorage(key) {
-	const [data, setData] = useState();
+	const [data, setData] = useState([]);
 	// Используем  хук, только для первого рендера
 	useEffect(() => {
 		const responce = JSON.parse(localStorage.getItem(key));
