@@ -6,7 +6,7 @@ import { formReducer, INITIAL_STATE } from './JournalForm.state';
 import Input from '../Input/Input';
 import { UserContext } from '../../context/user.context';
 
-function JournalForm({ onSubmit, data }) {
+function JournalForm({ onSubmit, onDelete, data }) {
 	// Используем хук useReducer для управления состоянием формы.
 	// formState будет хранить текущее состояние, а dispatchForm — функцию для отправки действий редьюсеру.
 	const [formState, dispatchForm] = useReducer(formReducer, INITIAL_STATE);
@@ -51,11 +51,18 @@ function JournalForm({ onSubmit, data }) {
 	}, [isValid]); // Зависимость от isValid, чтобы срабатывать при его изменении.
 
 	useEffect(() => {
+		if (!data) {
+			dispatchForm({ type: 'CLEAR' });
+			dispatchForm({
+				type: 'SET_VALUE',
+				payload: { userId }
+			});
+		}
 		dispatchForm({
 			type: 'SET_VALUE',
 			payload: { ...data }
 		});
-	}, [data]);
+	}, [data, userId]);
 
 	// Второй useEffect следит за изменением состояния isFormReadyToSubmit.
 	useEffect(() => {
@@ -93,9 +100,18 @@ function JournalForm({ onSubmit, data }) {
 		});
 	};
 
+	const deleteJournalItem = () => {
+		onDelete(data.id);
+		dispatchForm({ type: 'CLEAR' });
+		dispatchForm({
+			type: 'SET_VALUE',
+			payload: { userId }
+		});
+	};
+
 	return (
 		<form className={styles['journal-form']} onSubmit={addJournalItem}>
-			<div>
+			<div className={styles['form-row']}>
 				<Input
 					ref={titleRef}
 					isValid={isValid.title}
@@ -105,6 +121,15 @@ function JournalForm({ onSubmit, data }) {
 					name='title'
 					appearance='title'
 				/>
+				{data?.id &&
+					<button
+						className={styles['delete']}
+						type='button'
+						onClick={deleteJournalItem}
+					>
+						<img src='/icon_archive.svg' alt='Иконка удалить' />
+					</button>
+				}
 			</div>
 			<div className={styles['form-row']}>
 				<label className={styles['form-label']} htmlFor='date'>
@@ -115,7 +140,9 @@ function JournalForm({ onSubmit, data }) {
 					ref={dateRef}
 					isValid={isValid.date}
 					type='date'
-					value={values.date? new Date(values.date).toISOString().slice(0,10) : ''}
+					value={
+						values.date ? new Date(values.date).toISOString().slice(0, 10) : ''
+					}
 					onChange={onChange}
 					name='date'
 					id='date'
