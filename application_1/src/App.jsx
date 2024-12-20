@@ -1,50 +1,71 @@
 import './App.css';
-import Button from './components/Button/Button';
-import CardButton from './components/CardButton/CardButton';
-import JournalItem from './components/JournalItem/JournalItem';
 import LeftPanel from './layouts/LeftPanel/LeftPanel';
 import Body from './layouts/Body/Body';
 import Header from './components/Header/Header';
 import JournalAddButton from './components/JournalAddButton/JournalAddButton';
 import JournalList from './components/JournalList/JournalList';
+import JournalForm from './components/JournalForm/JournalForm';
+import { useLocalStorage } from './hooks/useLocalStorage.hook';
+import { UserContextProvider } from './context/user.context';
+import { useState } from 'react';
+
+function mapItems(items) {
+	if (!items) {
+		return [];
+	}
+	return items.map(i => ({
+		...i,
+		date: new Date(i.date)
+	}));
+}
+
 function App() {
-	const data = [
-		{
-			title: 'Подготовка к обновлению курсов',
-			date: new Date(),
-			text: 'Горные походы открывают удивительные природные ландшафты',
-		},
-		{
-			title: 'Поход в горы',
-			date: new Date(),
-			text: 'Думал, что очень много времени',
-		},
-	];
+	const [items, setItems] = useLocalStorage('data');
+	const [selectedItem, setSelectedItem] = useState(null);
+
+	const addItem = item => {
+		if (!item.id) {
+			setItems([
+				...mapItems(items),
+				{
+					...item,
+					date: new Date(item.date), //  преобразуем date в объект Date, чтобы привести формат даты к тому, который ожидается компонентом "JournalItem". Это поможет избежать ошибок, связанных с несовместимостью форматов.
+					id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1
+				}
+			]);
+		} else {
+			setItems([
+				...mapItems(items).map(i => {
+					if (i.id === item.id) {
+						return { ...item };
+					}
+					return i;
+				})
+			]);
+		}
+	};
+
+	const deleteItem = id => {
+		setItems([...items.filter(i => i.id !== id)]);
+	};
 
 	return (
-		<div className='app'>
-			<LeftPanel>
-				<Header />
-				<JournalAddButton />
-				<JournalList>
-					<CardButton>
-						<JournalItem
-							title={data[0].title}
-							text={data[0].text}
-							date={data[0].date}
-						/>
-					</CardButton>
-					<CardButton>
-						<JournalItem
-							title={data[1].title}
-							text={data[1].text}
-							date={data[1].date}
-						/>
-					</CardButton>
-				</JournalList>
-			</LeftPanel>
-			<Body>Body</Body>
-		</div>
+		<UserContextProvider>
+			<div className='app'>
+				<LeftPanel>
+					<Header />
+					<JournalAddButton clearForm={() => setSelectedItem(null)} />
+					<JournalList items={mapItems(items)} setItem={setSelectedItem} />
+				</LeftPanel>
+				<Body>
+					<JournalForm
+						onSubmit={addItem}
+						onDelete={deleteItem}
+						data={selectedItem}
+					/>
+				</Body>
+			</div>
+		</UserContextProvider>
 	);
 }
 
